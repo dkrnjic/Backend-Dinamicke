@@ -5,27 +5,50 @@ const { uuid } = require('uuidv4');
 app.use(express.json());
 const bcrypt = require('bcrypt');
 
-let users= [
-    {
-	"email": "d@d",
-	"password": "test"
-    }   
-];
+app.use(express.static('../Projekt-Dinamicke'))
+
+let users= [{
+    email: "w@w",
+    password:"password",
+    name:"Pero"
+}];
 
 app.get('/users', (req, res)=>{
-    res.json(users);
+ res.status(200).json(users); 
 });
 
+app.get('/info:dynamic', (req, res)=>{
+    const { dynamic } = req.params;
+    const { key } = req.query;
+    console.log(dynamic+" " , key);
+    res.status(200).json({info: 'neki text'});
+});
+
+
+
 app.post('/users', async (req, res) => {
-    try{
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        const  user = {email: req.body.email ,
-        password: hashedPassword};
-        users.push(user);
-        res.status(201).send();
-    }catch{
-        res.status(500).send();
-    }
+    console.log(req.body.email, req.body.password);
+        let temmm = users.find(({email})=>email === req.body.email);
+        if(temmm !== undefined){
+            console.log("taj email vec postoji u bazi");
+            res.status(500).send("error");
+            return;
+        }
+        else{
+            try{
+                const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                const  user = {email: req.body.email ,
+                password: hashedPassword};
+                console.log(user);
+                users.push(user);
+                console.log(users);
+                res.status(201).send();
+            }catch{
+                res.status(500).send();
+            }
+        }
+        
+    
    
 });
 
@@ -47,14 +70,14 @@ app.post('/users/login', async (req, res) => {
 });
 
 
-app.patch("/updateUser/:id", (req,res)=>{
+/* app.patch("/updateUser/:id", (req,res)=>{
    
 })
 
 app.delete("/deleteUser", (req,res)=>{ 
     })
     
-
+ */
 app.listen(PORT, (error) =>{
     if(!error)
         console.log("Server slusa "+ PORT);
