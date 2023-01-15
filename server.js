@@ -4,6 +4,69 @@ const PORT = 8080;
 const { uuid } = require('uuidv4');
 app.use(express.json());
 const bcrypt = require('bcrypt');
+const cors = require("cors");
+app.use(cors());
+const session = require('express-session');
+const sql = require('mssql');
+
+const config = {
+    user: 'rpuser',
+    password: '1234',
+    server: 'localhost',
+    port: 1433,
+    database: 'Studopraksa',
+    options: {
+      encrypt: false // use this for Azure SQL Server
+    }
+  }
+
+  sql.connect(config).then(pool => {
+    // connected
+    console.log("Connected to the DB")
+}).catch(err => {
+    console.log("Error while connecting to DB", err)
+});
+
+const newUser = {
+    username: 'JohnDoe',
+    email: 'johndoe@example.com',
+    password: 'password'
+}
+
+/* sql.connect(config).then(pool => {
+    var request = new sql.Request();
+    request.input('username', sql.NVarChar(255), newUser.username);
+    request.input('email', sql.NVarChar(255), newUser.email);
+    request.input('password', sql.NVarChar(255), newUser.password);
+    request.query(`INSERT INTO users (username, email, password) VALUES (@username, @email, @password)`, (err, result) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log("User inserted successfully");
+        }
+    });
+}).catch(err => {
+    console.log("Error while connecting to DB", err)
+}); */
+
+
+app.use(session({
+  secret: 'mysecret', // use a secret string to encrypt the session data
+  resave: false,
+  saveUninitialized: true
+}));
+
+
+async () => {
+    try {
+        // make sure that any items are correctly URL encoded in the connection string
+        await sql.connect('Server=localhost,1433;Database=database;User Id=rpuser;Password=1234;Encrypt=false')
+        const result = await sql.query`select * from sales.customers where customer_id = 1`
+        console.dir(result)
+    } catch (err) {
+        // ... error checks
+    }
+}
 
 app.use(express.static('../Projekt-Dinamicke'))
 
@@ -31,7 +94,7 @@ app.post('/users', async (req, res) => {
         let temmm = users.find(({email})=>email === req.body.email);
         if(temmm !== undefined){
             console.log("taj email vec postoji u bazi");
-            res.status(500).send("error");
+            res.status(500).send("That email is already registered in a database");
             return;
         }
         else{
@@ -53,13 +116,20 @@ app.post('/users', async (req, res) => {
 });
 
 app.post('/users/login', async (req, res) => {
-    const user = users.find(user=> user.email = req.body.email)
+    console.log("USO");
+    const user = users.find(user=> user.email === req.body.email)
     if(user == null){
         return res.status(400).send("Korisnik ne postoji");
     }
+   
     try{
         if(await bcrypt.compare(req.body.password, user.password)){
-            res.send("Success");
+           
+            /* req.session.user = {
+             id: user.id,
+            name: user.name
+            }; */
+            res.redirect('http://127.0.0.1:5500/home.html');
         }
         else{
             res.send("Not Allowed");
