@@ -8,8 +8,10 @@ app.use(express.urlencoded({ extended: false }));
 //routes
 const usersRoute= require('./routes/users')
 const registerRoute= require('./routes/register')
-const loginRoute= require('./routes/login')
-const cookieRoute= require('./cookies')
+const AuthRoute= require('./routes/auth')
+const homeRoute= require('./routes/home')
+
+const cookieRoute= require('./tests/cookies')
 const db = require('./database/database');
 db.connectToServer();
 
@@ -23,6 +25,11 @@ var corsOptions = {
 app.use(cors(corsOptions))
 app.use(cookieParser());
 
+app.use((req,res,next)=>{
+  console.log("Type: "+ req.method + ",  Route: " + req.url);
+  next();
+})
+
 app.listen(PORT, (error) =>{
     if(!error)
         console.log("Server slusa "+ PORT);
@@ -30,13 +37,19 @@ app.listen(PORT, (error) =>{
         console.log("error ne moze se spojit na port i error je", error);
 })
 
+
+
 app.use('/users',usersRoute);
 
 app.use('/register',registerRoute);
 
-app.use('/login',loginRoute);
+app.use('/',AuthRoute);
 
-app.use('/',cookieRoute);
+//app.use('/cookies',cookieRoute);
+
+app.use('/home',homeRoute);
+
+/* app.use('/',cookieRoute); */
 /* 
 app.get('/test', (req, res) => {
     // Check if the user is logged in
