@@ -1,9 +1,13 @@
 const { Router } = require('express')
 const router = Router();
-
+const session = require('express-session');
 //connect to Mongodb
 const db = require('../database/database');
-
+const MongoDBSession = require('connect-mongodb-session')(session);
+const store = new MongoDBSession({
+    uri:db.getUri(),
+    collection: db.getCollectionSession(),
+})
 
 const bcrypt = require('bcrypt');
 
@@ -12,8 +16,31 @@ router.use((req,res,next)=>{
     next();
 })
 
-router.post('/', async(req,res)=>{
-   //console.log(req.body.email, req.body.password);
+
+router.use(session({
+    secret: 'mysecret', // use a secret string to encrypt the session data
+    resave:false,
+    saveUninitialized: false,//login inace ce novi session id za svaki req do servera stavi na false
+    store
+  }));
+
+const isAuth = (req,res,next)=>{    
+    if(req.session.authenticated)
+        next();
+    else
+        res.redirect('http://localhost:5500/login.html');  
+    }
+
+router.use('/check',isAuth, async(req,res)=>{
+    res.status(200).send();
+  })
+
+  
+
+
+
+const checkEmail = async(req,res,next)=>{    
+     //console.log(req.body.email, req.body.password);
    let doc = await db.getDb().collection('collection').find({ email: req.body.email})
    doc = await doc.toArray()
    //console.log(doc);
@@ -30,7 +57,9 @@ router.post('/', async(req,res)=>{
            let result = await db.getDb().collection('collection').insertOne(user)
            if (result.insertedId){
                console.log("uspjeh registriranja korisnika");
-               res.json({"status":"OK", "message":`Item ${req.body.email} saved in DB`})
+               //res.cookie('myCookie', 'myValue', {sameSite: 'strict',maxAge: 1000*60*10,sameSite: 'None', secure: true });
+               next();
+              
            }
            else
            {
@@ -42,6 +71,22 @@ router.post('/', async(req,res)=>{
            res.status(500).send();
        }
        }
+
+}
+const giveSession = (req,res,next)=>{
+    req.session.authenticated = true;
+    let username1 = req.body.email;
+    req.session.user = username1;
+    req.session.save((err)=> {if (err) console.log(err);})
+    next()
+};
+
+router.post('/',checkEmail,giveSession, async(req,res)=>{
+    res.redirect('http://localhost:5500/profilemaker.html');
+    //res.json({"status":"OK", "message":`Item ${req.body.email} saved in DB`})
 })
+
+
+
 
 module.exports = router;
