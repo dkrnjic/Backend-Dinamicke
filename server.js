@@ -5,6 +5,14 @@ app.use(express.json());
 app.use(express.static('../Projekt-Dinamicke'))
 app.use(express.urlencoded({ extended: false }));
 
+const fs = require('fs');
+
+const uploadDir = './uploads';
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
 //routes
 const usersRoute= require('./routes/users')
 const registerRoute= require('./routes/register')
