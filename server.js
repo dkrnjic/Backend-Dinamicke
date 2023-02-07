@@ -32,6 +32,7 @@ var corsOptions = {
   }
 app.use(cors(corsOptions))
 app.use(cookieParser());
+app.use("/img",express.static('uploads'));
 
 app.use((req,res,next)=>{
   console.log("Type: "+ req.method + ",  Route: " + req.url);

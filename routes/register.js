@@ -53,7 +53,17 @@ const checkEmail = async(req,res,next)=>{
        try{
            const hashedPassword = await bcrypt.hash(req.body.password, 10)
            const  user = {email: req.body.email ,
-           password: hashedPassword};
+           password: hashedPassword,
+            "data":{
+            "ime" : "", "prezime" : "",
+            "rodenje" : "", "spol" : "",
+            "nacionalnost" :"", "mob" : "",
+            "lokacija" : "", "profesija" : "",
+            "about" : "", "vjestine" : "",
+            "avatar":"default.jpg"
+                    }  
+                }
+             
            let result = await db.getDb().collection('collection').insertOne(user)
            if (result.insertedId){
                console.log("uspjeh registriranja korisnika");

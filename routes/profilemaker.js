@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 //const session = require('express-session');
 
-let img;
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -32,20 +32,24 @@ router.use('/check',isAuth, async(req,res)=>{
 }) 
 
 router.use('/upload', upload.single('image'), (req, res) => {
-  console.log("test");
+  let img;
   if (!req.file) {
     return res.status(400).send('No file was uploaded.');
   }
-  console.log(req.file.path);
-  img= req.file.path;
-  res.send('File uploaded to ' + req.file.path);
+  var array = req.file.path.split("\\");
+  img = array.pop();
+  //img= req.file.path;
+   res.status(200).json(img);
 });
 
 const doesExist = async(req,res,next)=>{    
   let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
     if (userExist){
+      let img = req.body.data.avatar;
       try {
-        //console.log(req.body.data.ime);
+        if(img === "")
+            img = "default.jpg";
+    
         let test = await db.getDb().collection('collection').findOneAndUpdate(
           { email : req.session.user },
           { $set: {"data":{
@@ -54,7 +58,7 @@ const doesExist = async(req,res,next)=>{
                           "nacionalnost" : req.body.data.nacionalnost, "mob" : req.body.data.mob,
                           "lokacija" : req.body.data.lokacija, "profesija" : req.body.data.profesija,
                           "about" : req.body.data.about, "vjestine" : req.body.data.vjestine,
-                          "avatar": img
+                          "avatar":img
                           }
                 }
           } 
