@@ -19,7 +19,8 @@ const registerRoute= require('./routes/register')
 const AuthRoute= require('./routes/auth')
 const homeRoute= require('./routes/home')
 const profileMakerRoute= require('./routes/profilemaker')
-const cookieRoute= require('./tests/cookies')
+const practiceRoute= require('./routes/practice')
+
 const db = require('./database/database');
 db.connectToServer();
 
@@ -54,11 +55,13 @@ app.use('/register',registerRoute);
 
 app.use('/',AuthRoute);
 
-app.use('/cookies',cookieRoute);
+
 
 app.use('/home',homeRoute);
 
 app.use('/profilemaker',profileMakerRoute);
+
+app.use('/practice',practiceRoute);
 
 /* app.use('/',cookieRoute); */
 /* 

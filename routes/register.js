@@ -52,17 +52,28 @@ const checkEmail = async(req,res,next)=>{
    else{
        try{
            const hashedPassword = await bcrypt.hash(req.body.password, 10)
-           const  user = {email: req.body.email ,
+           const  user = 
+           {email: req.body.email ,
            password: hashedPassword,
             "data":{
-            "ime" : "", "prezime" : "",
-            "rodenje" : "", "spol" : "",
-            "nacionalnost" :"", "mob" : "",
-            "lokacija" : "", "profesija" : "",
-            "about" : "", "vjestine" : "",
-            "avatar":"default.jpg"
-                    }  
+                    "ime" : "", "prezime" : "",
+                    "rodenje" : "", "spol" : "",
+                    "nacionalnost" :"", "mob" : "",
+                    "lokacija" : "", "profesija" : "",
+                    "about" : "", "vjestine" : "",
+                    "avatar":"default.jpg"
+                    },
+            "practice":{
+                        "day":{
+                                1:{
+                                    "content":"","title":""
+                                    }
+                        },"fin":"false"
                 }
+            }
+                    
+               
+            
              
            let result = await db.getDb().collection('collection').insertOne(user)
            if (result.insertedId){

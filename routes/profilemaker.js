@@ -61,7 +61,9 @@ const doesExist = async(req,res,next)=>{
                           "avatar":img
                           }
                 }
+               
           } 
+        
        );
        res.redirect("http://localhost:5500/home.html")
       } catch{

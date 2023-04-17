@@ -2,7 +2,7 @@ const { Router } = require('express')
 const session = require('express-session');
 const router = Router();
 const bcrypt = require('bcrypt');
-const cookie = require('../tests/cookies');
+//const cookie = require('../tests/cookies');
 //connect to Mongodb
 const db = require('../database/database');
 const MongoDBSession = require('connect-mongodb-session')(session);
