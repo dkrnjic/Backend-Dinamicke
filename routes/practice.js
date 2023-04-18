@@ -25,7 +25,17 @@ const isAuth = async(req,res,next)=>{
         res.redirect('http://localhost:5500/login.html');
     }
   
-
+router.use('/check',isAuth, async(req,res)=>{
+    let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+    if (userExist){
+        try {
+            res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, practice: userExist.practice.fin}  ));  
+        } catch{
+        console.log("greska u dohvacanju username-a");
+        res.status(403).send("neap");
+        }
+    }   
+    }) 
 
 
 router.get('/:day',isAuth, async(req, res) => {
@@ -58,19 +68,19 @@ router.get('/:day',isAuth, async(req, res) => {
     }
   }); 
 
-  
+
 
 
   router.post('/',isAuth, async(req,res)=>{
     try {
         let userExist1 = await db.getDb().collection('collection').findOne({ email: req.session.user});
-        if (!userExist1) {
-            console.log('User not found');
-            return res.status(404).json({ message: 'User not found' });
-        }
         if(userExist1.practice.fin ==="false"){
             const { day, content, title } = req.body;
-            console.log(title); 
+            console.log(title);
+            if (!userExist1) {
+                console.log('User not found');
+                return res.status(404).json({ message: 'User not found' });
+            }
             let result = await db.getDb().collection('collection').updateOne(
                 { email : userExist1.email },
                 { $set: { [`practice.day.${day}`]: {content:content, title:title} } },
@@ -79,7 +89,8 @@ router.get('/:day',isAuth, async(req, res) => {
             console.log(result);
             res.status(201).json("OK"); 
         }
-        res.status(403).json("U can't modify this file"); 
+       
+      
     }
     catch (error) {
         console.log("Something went wrong");
@@ -89,29 +100,27 @@ router.get('/:day',isAuth, async(req, res) => {
 });
 
 router.post('/predaj',isAuth, async(req,res)=>{
-    try {
-        let userExist1 = await db.getDb().collection('collection').findOne({ email: req.session.user});
-        if (!userExist1) {
-            console.log('User not found');
-            return res.status(404).json({ message: 'User not found' });
+       try {
+            let userExist1 = await db.getDb().collection('collection').findOne({ email: req.session.user});
+            if (!userExist1) {
+                console.log('User not found');
+                return res.status(404).json({ message: 'User not found' });
+            }
+            if(userExist1.practice.fin ==="false"){
+                let result = await db.getDb().collection('collection').updateOne(
+                    { email : userExist1.email },
+                    { $set: { [`practice.fin`]: "true" } },
+                    { upsert: true }      
+                );
+                console.log(result);
+                res.status(201).json("OK"); 
+            }
         }
-        if(userExist1.practice.fin ==="false"){
-            let result = await db.getDb().collection('collection').updateOne(
-                { email : userExist1.email },
-                { $set: { [`practice.fin`]: "true" } },
-                { upsert: true }      
-            );
-            console.log(result);
-            res.status(201).json("OK"); 
+        catch (error) {
+            console.log("Something went wrong");
+            console.log(error);
+            res.status(500).json({ message: 'Something went wrong' });
         }
-        res.status(403).json("U can't modify this file"); 
-    }
-    catch (error) {
-        console.log("Something went wrong");
-        console.log(error);
-        res.status(500).json({ message: 'Something went wrong' });
-    }
-});
-
+    });
 
 module.exports = router;
