@@ -19,17 +19,22 @@ router.use((req,res,next)=>{
 const isAuth = async(req,res,next)=>{    
     if(req.session.authenticated){
         next();
-    }
-        
-    else
+    }else
         res.redirect('http://localhost:5500/login.html');
     }
+
+    
   
 router.use('/check',isAuth, async(req,res)=>{
     let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
     if (userExist){
         try {
-            res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, practice: userExist.practice.fin}  ));  
+            if(userExist.praksa.status=="Nema"){
+                res.redirect('http://localhost:5500/my-practice.html');
+            }else{
+                res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, practice: userExist.practice.fin, praksa:userExist.praksa }  )); 
+            }
+            
         } catch{
         console.log("greska u dohvacanju username-a");
         res.status(403).send("neap");
@@ -106,15 +111,22 @@ router.post('/predaj',isAuth, async(req,res)=>{
                 console.log('User not found');
                 return res.status(404).json({ message: 'User not found' });
             }
-            if(userExist1.practice.fin ==="false"){
+            if (userExist1.practice.fin === "false") {
                 let result = await db.getDb().collection('collection').updateOne(
                     { email : userExist1.email },
-                    { $set: { [`practice.fin`]: "true" } },
-                    { upsert: true }      
+                    { 
+                        $set: { 
+                            'practice.fin': "true",
+                            'praksa.status': "Završena",
+                            'praksa.Datum_zavrsetka': new Date().toLocaleString()
+                        } 
+                    },
+                    { upsert: true }
                 );
                 console.log(result);
-                res.status(201).json("OK"); 
-            }
+                res.status(201).json("OK");
+              }
+              
         }
         catch (error) {
             console.log("Something went wrong");

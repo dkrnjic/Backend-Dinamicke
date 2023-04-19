@@ -34,6 +34,29 @@ router.use('/check',isAuth, async(req,res)=>{
 }) 
 
 
+router.post('/test', async(req, res) => {
+    console.log("test1");
+    try {
+        let naziv = req.body.Naziv_poduzeca;
+        console.log(naziv);
+        let praksaExist = await db.getDb().collection('prakse').findOne({ Naziv_poduzeća: naziv})
+        if (!praksaExist) {
+            console.log('praksa not found');
+            return res.status(404).json({ message: 'praksa not found' });
+        }
+        let result = await db.getDb().collection('collection').updateOne(
+            { email : req.session.user },
+            { $set: { 'praksa': {status:"U tijeku", Mentor:"Petar Peric", Datum_pocetka:new Date().toLocaleString(),Datum_zavrsetka:"/",Naziv_poduzeca:naziv} } },
+            { upsert: true }      
+        );
+        console.log(result);
+        res.status(201).json("OK"); 
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 
 router.get('/', async(req, res) => {
     console.log("test");
