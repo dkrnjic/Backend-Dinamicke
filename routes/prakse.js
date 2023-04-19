@@ -12,17 +12,46 @@ router.use((req,res,next)=>{
     next();
 })
 
+const isAuth = async(req,res,next)=>{    
+    if(req.session.authenticated){
+        next();
+    }
+        
+    else
+        res.redirect('http://localhost:5500/login.html');
+    }
+
+router.use('/check',isAuth, async(req,res)=>{
+    let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+    if (userExist){
+        try {
+            res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, praksa: userExist.praksa}  ));  
+        } catch{
+        console.log("greska u dohvacanju username-a");
+        res.status(403).send("neap");
+        }
+    }   
+}) 
+
+
+
 router.get('/', async(req, res) => {
     console.log("test");
     try {
-        const prakseTemp = await db.getDb().collection("prakse").find().limit(4); 
+        const start = parseInt(req.query.start) || 0; 
+        const prakseTemp = await db.getDb().collection("prakse").find().skip(start).limit(4); 
         let prakse = await prakseTemp.toArray();
+        if (prakse === undefined || prakse.length == 0) {
+            res.status(404).json({ message: "No content" });
+            return;
+        }
         res.status(200).json(prakse); 
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Server error" });
     }
 });
+
 
   router.post('/add', async(req, res) => {
     try {
