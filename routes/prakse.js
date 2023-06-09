@@ -25,7 +25,11 @@ router.use('/check',isAuth, async(req,res)=>{
     let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
     if (userExist){
         try {
+            if(userExist.admin)
+                res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
+            else
             res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, praksa: userExist.praksa}  ));  
+           
         } catch{
         console.log("greska u dohvacanju username-a");
         res.status(403).send("neap");
@@ -33,6 +37,47 @@ router.use('/check',isAuth, async(req,res)=>{
     }   
 }) 
 
+router.use('/checkAdmin',isAuth, async(req,res)=>{
+    let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+    if (userExist){
+        try {
+            if(userExist.admin)
+                res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
+            else
+            res.status(200).send(JSON.stringify({data: "forbidden"}  ));  
+           
+        } catch{
+        console.log("greska u dohvacanju username-a");
+        res.status(403).send("neap");
+        }
+    }   
+}) 
+
+router.get('/prakseAdmin', async (req, res) => {
+    try {
+      const start = parseInt(req.query.start) || 0;
+      const prakseTemp = await db
+        .getDb()
+        .collection("collection")
+        .find({ "praksa.status": "Završena" })
+        .skip(start)
+        .limit(4)
+        .project({ email: 0, password: 0 }); // Exclude email, password, and data fields
+        
+        
+      let prakse = await prakseTemp.toArray();
+      console.log(prakse);
+      if (prakse === undefined || prakse.length == 0) {
+        res.status(404).json({ message: "No content" });
+        return;
+      }
+      res.status(200).json(prakse);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
 
 router.post('/test', async(req, res) => {
     console.log("test1");

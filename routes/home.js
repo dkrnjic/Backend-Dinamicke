@@ -20,7 +20,10 @@ router.use('/check',isAuth, async(req,res)=>{
   let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
   if (userExist){
     try {
-       res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user}  ));  
+      if(userExist.admin)
+        res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
+       else
+        res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user}  ));  
     } catch{
       console.log("greska u dohvacanju username-a");
       res.status(403).send("neap");
