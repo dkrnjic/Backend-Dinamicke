@@ -19,7 +19,7 @@ const isAuth = async(req,res,next)=>{
     }
         
     else
-        res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');
+        res.redirect('http://localhost:5500/login.html');
     }
 
 router.use('/check',isAuth, async(req,res)=>{

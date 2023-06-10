@@ -28,7 +28,7 @@ db.connectToServer();
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 var corsOptions = {
-    origin: 'https://webapps-projekt-frontend-dkrnjic.onrender.com',
+    origin: 'http://localhost:5500',
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     credentials:true
   }
