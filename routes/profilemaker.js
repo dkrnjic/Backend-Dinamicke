@@ -24,7 +24,7 @@ const isAuth = (req,res,next)=>{
   if(req.session.authenticated)
       next();
   else
-      res.redirect('http://localhost:5500/login.html');
+      res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');
   }
   
 router.use('/check',isAuth, async(req,res)=>{
@@ -65,13 +65,13 @@ const doesExist = async(req,res,next)=>{
           } 
         
        );
-       res.redirect("http://localhost:5500/home.html")
+       res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/home.html")
       } catch{
         console.log("nije mogao postat");
       }
     }
     else{
-      res.redirect("http://localhost:5500/login.html")
+      res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html")
     }
 }
 

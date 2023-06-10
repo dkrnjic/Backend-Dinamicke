@@ -28,7 +28,7 @@ const isAuth = (req,res,next)=>{
     if(req.session.authenticated)
         next();
     else
-        res.redirect('http://localhost:5500/login.html');  
+        res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');  
     }
 
 router.use('/check',isAuth, async(req,res)=>{
@@ -111,7 +111,7 @@ const giveSession = (req,res,next)=>{
 };
 
 router.post('/',checkEmail,giveSession, async(req,res)=>{
-    res.redirect('http://localhost:5500/profilemaker.html');
+    res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/profilemaker.html');
     //res.json({"status":"OK", "message":`Item ${req.body.email} saved in DB`})
 })
 
