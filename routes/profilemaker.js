@@ -76,22 +76,9 @@ const doesExist = async(req,res,next)=>{
 }
 
 router.use('/postdata',isAuth,doesExist,(req,res)=>{
-  console.log("valja");
   res.status(200).send();
 }) 
 
-
-/* router.post('/logout',isAuth, function(req, res){
-    try {
-      req.session.destroy((err)=>{
-        if(err) throw err;
-        res.redirect("http://localhost:5500/login.html")
-      });
-    } catch (error) {
-      console.log("bug");
-      res.redirect("http://localhost:5500/login.html")
-    } 
- }); */
 
 module.exports = router;
 

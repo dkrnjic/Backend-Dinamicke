@@ -161,7 +161,6 @@ router.post('/accept',isAuth, async(req, res) => {
 
 
 router.get('/', async(req, res) => {
-    console.log("test");
     try {
         const start = parseInt(req.query.start) || 0; 
         const prakseTemp = await db.getDb().collection("prakse").find().skip(start).limit(4); 
@@ -180,22 +179,37 @@ router.get('/', async(req, res) => {
 
   router.post('/add', async(req, res) => {
     try {
-        let praksaJson = {
-            "Naslov" : req.body.Naslov,
-            "Naziv_poduzeća" : req.body.Naziv_poduzeća,
-            "Adresa": req.body.Adresa,
-            "Kontakt": req.body.Kontakt,
-            "Slika" : req.body.Slika
+        let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+        if (userExist){
+            try {
+                if(userExist.admin){
+                    let praksaJson = {
+                        "Naslov" : req.body.Naslov,
+                        "Naziv_poduzeća" : req.body.Naziv_poduzeća,
+                        "Adresa": req.body.Adresa,
+                        "Kontakt": req.body.Kontakt,
+                        "Slika" : req.body.Slika
+                        }
+                    let result = await db.getDb().collection('prakse').insertOne(praksaJson)
+                    if (result.insertedId){
+                        console.log("uspjeh dodavanja prakse");
+                    }
+                    else{
+                        console.log("neuspjeh dodavanja prakse");
+                        return res.json({"status":"Failed"})
+                    }
+                   
+                    return  res.status(200).send(JSON.stringify({msg: "success"}  ));  
+                }
+                else
+                    return res.status(200).send(JSON.stringify({data: "forbidden"}  ));  
+               
+            } catch(error){
+            console.log("greska u dohvacanju username-a",error);
+                return res.status(403).send("neap");
             }
-        let result = await db.getDb().collection('prakse').insertOne(praksaJson)
-        if (result.insertedId){
-            console.log("uspjeh dodavanja prakse");
-        }
-        else{
-            console.log("neuspjeh dodavanja prakse");
-            res.json({"status":"Failed"})
-        }
-        res.status(200).json("ok"); 
+        }  
+       
     } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
