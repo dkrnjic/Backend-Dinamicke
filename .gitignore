@@ -4,3 +4,4 @@ node_modules
 #test scr
 /tests
 #database connection and credentials
+/database
