@@ -69,13 +69,15 @@ const checkEmail = async(req,res,next)=>{
                                     "content":"","title":""
                                     }
                         },"fin":"false"
+                       
                 },
                 "praksa":{
                     "status":"Nema",
                     "Naziv_poduzeca":"/",
                     "Mentor":"Petar Peric",
                     "Datum_pocetka":"/",
-                    "Datum_zavrsetka":"/"}
+                    "Datum_zavrsetka":"/"},
+                "status":"Pending"
             }
                     
                

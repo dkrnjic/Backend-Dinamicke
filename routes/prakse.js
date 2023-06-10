@@ -4,6 +4,7 @@ const router = Router();
 const session = require('express-session');
 //connect to Mongodb
 const db = require('../database/database');
+const { ObjectId } = require('mongodb');
 
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
@@ -28,7 +29,7 @@ router.use('/check',isAuth, async(req,res)=>{
             if(userExist.admin)
                 res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
             else
-            res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, praksa: userExist.praksa}  ));  
+            res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, praksa: userExist.praksa,status:userExist.status, comment:userExist.comment}  ));  
            
         } catch{
         console.log("greska u dohvacanju username-a");
@@ -61,7 +62,7 @@ router.get('/prakseAdmin', async (req, res) => {
         .collection("collection")
         .find({ "praksa.status": "Završena" })
         .skip(start)
-        .limit(4)
+        
         .project({ email: 0, password: 0 }); // Exclude email, password, and data fields
         
         
@@ -80,7 +81,6 @@ router.get('/prakseAdmin', async (req, res) => {
   
 
 router.post('/test', async(req, res) => {
-    console.log("test1");
     try {
         let naziv = req.body.Naziv_poduzeca;
         console.log(naziv);
@@ -96,6 +96,63 @@ router.post('/test', async(req, res) => {
         );
         console.log(result);
         res.status(201).json("OK"); 
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post('/reject',isAuth, async(req, res) => {
+    try {
+        let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+        if (userExist){
+            try {
+                if(userExist.admin){
+                    let result = await db.getDb().collection('collection').updateOne(
+                        { _id : new ObjectId( req.body.id) },
+                        { $set: {status:"Rejected",comment:req.body.comment}},
+                        { upsert: true }      
+                    );
+                  return res.status(200).send(JSON.stringify({msg: "success"}  ));  
+                }
+                else{
+                    return  res.status(200).send(JSON.stringify({msg: "forbidden"}  ));  
+                }
+            } catch{
+            console.log("greska u dohvacanju username-a");
+            res.status(403).send("neap");
+            }
+        }   
+        res.status(403).json({msg: "forbidden"}); 
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+router.post('/accept',isAuth, async(req, res) => {
+    try {
+        let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+        if (userExist){
+            try {
+                if(userExist.admin){
+                    let result = await db.getDb().collection('collection').updateOne(
+                        { _id : new ObjectId( req.body.id) },
+                        { $set: {status:"Approved",comment:req.body.comment}},
+                        { upsert: true }      
+                    );
+                    return  res.status(200).send(JSON.stringify({msg: "success"}  ));  
+                }
+                else
+                    return res.status(200).send(JSON.stringify({data: "forbidden"}  ));  
+               
+            } catch(error){
+            console.log("greska u dohvacanju username-a",error);
+                return res.status(403).send("neap");
+            }
+        }   
+        res.status(201).json(req.body.comment); 
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Server error" });
