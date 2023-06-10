@@ -38,7 +38,7 @@ router.use('/check',isAuth, async(req,res)=>{
     }   
 }) 
 
-router.use('/checkAdmin',isAuth, async(req,res)=>{
+router.get('/checkAdmin',isAuth, async(req,res)=>{
     let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
     if (userExist){
         try {
