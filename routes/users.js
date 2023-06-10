@@ -1,5 +1,6 @@
 const { Router } = require('express')
 const router = Router();
+const { ObjectId } = require('mongodb');
 
 //connect to Mongodb
 const db = require('../database/database');
@@ -23,33 +24,38 @@ router.get('/', async(req,res)=>{
         }
   })
 
-  // Dummy user profile data
-const users1 = [
-    {
-      name: "John Doe",
-      username: "johndoe",
-      email: "johndoe@example.com",
-      bio: "I'm a software engineer."
-    },
-    {
-      name: "Jane Doe",
-      username: "janedoe",
-      email: "janedoe@example.com",
-      bio: "I'm a UX designer."
+  router.get('/getUsers', async (req, res) => {
+    console.log("test");
+    try {
+      const start = parseInt(req.query.start) || 0;
+      const korisniciTemp = await db.getDb().collection("collection").find({ admin: { $exists: false } }).skip(start).limit(4);
+      let korisnici = await korisniciTemp.toArray();
+      if (korisnici === undefined || korisnici.length == 0) {
+        res.status(404).json({ message: "No content" });
+        return;
+      }
+      res.status(200).json(korisnici);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Server error" });
     }
-  ];
+  });
+  
 
-
-
-router.get("/userprofile/:username", (req, res) => {
-const username = req.params.username;
-const user = users1.find(u => u.username === username);
-
-if (!user) {
-    return res.status(404).json({ error: "User not found." });
-}
-
-res.json(user);
-});
+  router.get("/userprofile/:id", async (req, res) => {
+    const id = req.params.id;
+    try {
+      const user = await db.getDb().collection("collection").findOne({ _id: new ObjectId(id) });
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      res.status(200).json(user);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
 
 module.exports = router;
