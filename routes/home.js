@@ -9,7 +9,7 @@ const isAuth = (req,res,next)=>{
   if(req.session.authenticated)
       next();
   else
-      return res.status(200).json({msg: "Redirect"})
+      return res.status(403).json({msg: "Redirect"})
   }
 
 const getUsername = async(req,res,next)=>{    
