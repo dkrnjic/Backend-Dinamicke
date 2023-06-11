@@ -9,7 +9,7 @@ const isAuth = (req,res,next)=>{
   if(req.session.authenticated)
       next();
   else
-      res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');
+      return res.status(200).json({msg: "Redirect"})
   }
 
 const getUsername = async(req,res,next)=>{    
@@ -35,11 +35,11 @@ router.post('/logout',isAuth, function(req, res){
     try {
       req.session.destroy((err)=>{
         if(err) throw err;
-        res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html")
+        return res.status(200).json({msg: "Redirect"})
       });
     } catch (error) {
       console.log("bug");
-      res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html")
+      return res.status(200).json({msg: "Redirect"})
     } 
  });
 

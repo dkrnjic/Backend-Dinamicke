@@ -20,7 +20,7 @@ const isAuth = async(req,res,next)=>{
     if(req.session.authenticated){
         next();
     }else
-        res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');
+            return res.status(200).json({msg: "Redirect"})
     }
 
     
@@ -30,7 +30,7 @@ router.use('/check',isAuth, async(req,res)=>{
     if (userExist){
         try {
             if(userExist.praksa.status=="Nema"){
-                res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/my-practice.html');
+                return res.status(403).json({msg: "Redirect"})
             }else{
                 res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, practice: userExist.practice.fin, praksa:userExist.praksa }  )); 
             }
@@ -69,7 +69,7 @@ router.get('/:day',isAuth, async(req, res) => {
         }
     }   
     else{
-        res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html")
+        return res.status(200).json({msg: "Redirect"})
     }
   }); 
 

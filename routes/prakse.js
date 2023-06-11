@@ -17,9 +17,8 @@ const isAuth = async(req,res,next)=>{
     if(req.session.authenticated){
         next();
     }
-        
     else
-        res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');
+        return res.status(200).json({msg: "Redirect"})
     }
 
 router.use('/check',isAuth, async(req,res)=>{

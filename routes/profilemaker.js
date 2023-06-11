@@ -24,7 +24,7 @@ const isAuth = (req,res,next)=>{
   if(req.session.authenticated)
       next();
   else
-      res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html');
+      res.status(403).json({msg: "Forbidden"})
   }
   
 router.use('/check',isAuth, async(req,res)=>{
@@ -65,13 +65,13 @@ const doesExist = async(req,res,next)=>{
           } 
         
        );
-       res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/home.html")
+       return res.status(201).json({msg:"ok"})
       } catch{
         console.log("nije mogao postat");
       }
     }
     else{
-      res.redirect("https://webapps-projekt-frontend-dkrnjic.onrender.com/login.html")
+      res.status(403).json({msg: "Forbidden"})
     }
 }
 
