@@ -26,7 +26,8 @@ const isAuth = (req,res,next)=>{
     }
 
 router.use('/check',isAuth, async(req,res)=>{
-    res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/home.html');
+    return res.status(200).json({msg: "Redirect"})
+    //res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/home.html');
   })
 
 router.post('/login', async(req,res)=>{
@@ -38,7 +39,8 @@ router.post('/login', async(req,res)=>{
                 let username1 = req.body.email;
                 req.session.user = username1;
                 req.session.save((err)=> {if (err) console.log(err);})
-                res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/home.html');
+                return res.status(200).json({msg: "Redirect"})
+                //res.redirect('https://webapps-projekt-frontend-dkrnjic.onrender.com/home.html');
             }
             else{
                 console.log("neuspjesan login");
