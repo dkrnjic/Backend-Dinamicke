@@ -1,7 +1,6 @@
 const { Router } = require('express')
 const bodyParser = require('body-parser');
 const router = Router();
-const session = require('express-session');
 //connect to Mongodb
 const db = require('../database/database');
 const { ObjectId } = require('mongodb');
@@ -13,22 +12,17 @@ router.use((req,res,next)=>{
     next();
 })
 
-const isAuth = async(req,res,next)=>{    
-    if(req.session.authenticated){
-        next();
-    }
-    else
-        return res.status(200).json({msg: "Redirect"})
-    }
 
-router.use('/check',isAuth, async(req,res)=>{
-    let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+
+router.use('/check', async(req,res)=>{
+    const TokenUsername= req.user.username;
+    let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
     if (userExist){
         try {
             if(userExist.admin)
-                res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
+                res.status(200).send(JSON.stringify({data: userExist.data, email: TokenUsername,admin: true}  ));  
             else
-            res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user, praksa: userExist.praksa,status:userExist.status, comment:userExist.comment}  ));  
+            res.status(200).send(JSON.stringify({data: userExist.data, email: TokenUsername, praksa: userExist.praksa,status:userExist.status, comment:userExist.comment}  ));  
            
         } catch{
         console.log("greska u dohvacanju username-a");
@@ -37,12 +31,13 @@ router.use('/check',isAuth, async(req,res)=>{
     }   
 }) 
 
-router.get('/checkAdmin',isAuth, async(req,res)=>{
-    let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+router.get('/checkAdmin', async(req,res)=>{
+    const TokenUsername= req.user.username;
+    let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
     if (userExist){
         try {
             if(userExist.admin)
-                res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
+                res.status(200).send(JSON.stringify({data: userExist.data, email: TokenUsername,admin: true}  ));  
             else
             res.status(200).send(JSON.stringify({data: "forbidden"}  ));  
            
@@ -81,6 +76,7 @@ router.get('/prakseAdmin', async (req, res) => {
 
 router.post('/test', async(req, res) => {
     try {
+        const TokenUsername= req.user.username;
         let naziv = req.body.Naziv_poduzeca;
         console.log(naziv);
         let praksaExist = await db.getDb().collection('prakse').findOne({ Naziv_poduzeća: naziv})
@@ -89,7 +85,7 @@ router.post('/test', async(req, res) => {
             return res.status(404).json({ message: 'praksa not found' });
         }
         let result = await db.getDb().collection('collection').updateOne(
-            { email : req.session.user },
+            { email : TokenUsername },
             { $set: { 'praksa': {status:"U tijeku", Mentor:"Petar Peric", Datum_pocetka:new Date().toLocaleString(),Datum_zavrsetka:"/",Naziv_poduzeca:naziv} } },
             { upsert: true }      
         );
@@ -101,9 +97,10 @@ router.post('/test', async(req, res) => {
     }
 });
 
-router.post('/reject',isAuth, async(req, res) => {
+router.post('/reject', async(req, res) => {
     try {
-        let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+        const TokenUsername= req.user.username;
+        let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
         if (userExist){
             try {
                 if(userExist.admin){
@@ -130,9 +127,10 @@ router.post('/reject',isAuth, async(req, res) => {
 });
 
 
-router.post('/accept',isAuth, async(req, res) => {
+router.post('/accept', async(req, res) => {
     try {
-        let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+        const TokenUsername= req.user.username;
+        let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
         if (userExist){
             try {
                 if(userExist.admin){
@@ -178,7 +176,8 @@ router.get('/', async(req, res) => {
 
   router.post('/add', async(req, res) => {
     try {
-        let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+        const TokenUsername= req.user.username;
+        let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
         if (userExist){
             try {
                 if(userExist.admin){

@@ -1,29 +1,21 @@
 const { Router } = require('express')
 const router = Router();
 const db = require('../database/database');
-const session = require('express-session');
-const path = require('path');
+
+const jwt = require('jsonwebtoken');
 
 
-const isAuth = (req,res,next)=>{    
-  if(req.session.authenticated)
-      next();
-  else
-      return res.status(403).json({msg: "Redirect"})
-  }
 
-const getUsername = async(req,res,next)=>{    
- 
-}
-
-router.use('/check',isAuth, async(req,res)=>{
-  let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+router.use('/check', async(req,res)=>{
+  
+  const TokenUsername= req.user.username;
+  let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
   if (userExist){
     try {
       if(userExist.admin)
-        res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user,admin: true}  ));  
+        res.status(200).send(JSON.stringify({data: userExist.data,email: TokenUsername,admin: true}  ));  
        else
-        res.status(200).send(JSON.stringify({data: userExist.data, email: req.session.user}  ));  
+        res.status(200).send(JSON.stringify({data: userExist.data,email: TokenUsername}  ));  
     } catch{
       console.log("greska u dohvacanju username-a");
       res.status(403).send("neap");
@@ -31,12 +23,15 @@ router.use('/check',isAuth, async(req,res)=>{
 }   
 }) 
 
-router.post('/logout',isAuth, function(req, res){
+router.post('/logout', function(req, res){
     try {
-      req.session.destroy((err)=>{
-        if(err) throw err;
+      const TokenUsername= req.user.username;
+      if(TokenUsername)
         return res.status(200).json({msg: "Redirect"})
-      });
+      else{
+        return res.status(200).json({msg: "Bug"})
+      }
+      
     } catch (error) {
       console.log("bug");
       return res.status(200).json({msg: "Redirect"})

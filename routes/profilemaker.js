@@ -3,7 +3,7 @@ const router = Router();
  const db = require('../database/database');
 const multer = require('multer');
 const path = require('path');
-//const session = require('express-session');
+const jwt = require('jsonwebtoken');
 
 
 
@@ -17,17 +17,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-
-
-const isAuth = (req,res,next)=>{    
-    console.log("test");
-  if(req.session.authenticated)
-      next();
-  else
-      res.status(403).json({msg: "Forbidden"})
-  }
+router.use('/check', async(req,res)=>{
   
-router.use('/check',isAuth, async(req,res)=>{
   res.status(200).send();
 }) 
 
@@ -43,7 +34,10 @@ router.use('/upload', upload.single('image'), (req, res) => {
 });
 
 const doesExist = async(req,res,next)=>{    
-  let userExist = await db.getDb().collection('collection').findOne({ email: req.session.user})
+  
+  const TokenUsername= req.user.username;
+  console.log(TokenUsername);
+  let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
     if (userExist){
       let img = req.body.data.avatar;
       try {
@@ -51,7 +45,7 @@ const doesExist = async(req,res,next)=>{
             img = "default.jpg";
     
         let test = await db.getDb().collection('collection').findOneAndUpdate(
-          { email : req.session.user },
+          { email : TokenUsername},
           { $set: {"data":{
                           "ime" : req.body.data.ime, "prezime" : req.body.data.prezime,
                           "rodenje" : req.body.data.rodenje, "spol" : req.body.data.spol,
@@ -75,7 +69,7 @@ const doesExist = async(req,res,next)=>{
     }
 }
 
-router.use('/postdata',isAuth,doesExist,(req,res)=>{
+router.use('/postdata',doesExist,(req,res)=>{
   res.status(200).send();
 }) 
 
