@@ -1,54 +1,52 @@
-const { Router } = require('express')
+const { Router } = require('express');
 const router = Router();
 const { ObjectId } = require('mongodb');
-
-//connect to Mongodb
 const db = require('../database/database');
-
-let users;
 
 router.use((req,res,next)=>{
     console.log("Ulazak u users route");
     next();
 })
 
-router.get('/', async(req,res)=>{
+// GET /users - Dohvati sve korisnike  TEST 
+/* router.get('/', async(req,res)=>{
         try {
-            console.log(db);
-            const usersTemp = await db.getDb().collection("collection").find();
-            users = await usersTemp.toArray();
-            res.status(200).json(users); 
+          const users = await db.getDb().collection('collection').find().toArray();
+          res.status(200).json(users);
         }
         catch (error) {
-            console.log(error);
+          console.log(error);
+          res.status(500).json({ message: 'Server error' });
         }
   })
+ */
 
-  router.get('/getUsers', async (req, res) => {
-    console.log("test");
+  // GET /users/ - Dohvati sljedeca 4 korisnika
+  router.get('/', async (req, res) => {
     try {
       const start = parseInt(req.query.start) || 0;
-      const korisniciTemp = await db.getDb().collection("collection").find({ admin: { $exists: false } }).skip(start).limit(4);
-      let korisnici = await korisniciTemp.toArray();
-      if (korisnici === undefined || korisnici.length == 0) {
-        res.status(404).json({ message: "No content" });
-        return;
+      const users = await db.getDb().collection('collection')
+      .find({ admin: { $exists: false } })
+      .skip(start)
+      .limit(4)
+      .toArray();
+      if (users.length === 0) {
+        return res.status(404).json({ message: 'No content' });
       }
-      res.status(200).json(korisnici);
+      res.status(200).json(users);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Server error" });
     }
   });
   
-
-  router.get("/userprofile/:id", async (req, res) => {
-    const id = req.params.id;
+  // GET /users/:id - Vrati korisnika po ID-u
+  router.get("/:id", async (req, res) => { 
     try {
+      const id = req.params.id;
       const user = await db.getDb().collection("collection").findOne({ _id: new ObjectId(id) });
       if (!user) {
-        res.status(404).json({ message: "User not found" });
-        return;
+        return res.status(404).json({ message: "User not found" });
       }
       res.status(200).json(user);
     } catch (error) {

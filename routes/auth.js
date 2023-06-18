@@ -6,22 +6,26 @@ require('dotenv').config();
 
 const db = require('../database/database');
 
+// POST /login - User login
 router.post('/login', async (req, res) => {
-  let userExist = await db.getDb().collection('collection').findOne({ email: req.body.email });
-  if (userExist) {
-    try {
-      if (await bcrypt.compare(req.body.password, userExist.password)) {
+  try {
+    const user = await db.getDb().collection('collection').findOne({ email: req.body.email });
+
+    if (user) {
+      const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+      if (passwordMatch) {
         const token = jwt.sign({ username: req.body.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ token: token });
+        return res.status(200).json({ token });
       } else {
         console.log('Unsuccessful login');
-        res.status(403).json('Bad credentials');
+        return res.status(403).json('Bad credentials');
       }
-    } catch {
-      res.status(404).send();
+    } else {
+      return res.status(422).json({ error: 'User does not exist' });
     }
-  } else {
-    return res.status(422).json({ error: 'Korisnik ne postoji' });
+  } catch (error) {
+    console.error('Error while logging in:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

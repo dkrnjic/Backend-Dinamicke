@@ -1,10 +1,7 @@
 const { Router } = require('express')
 const bodyParser = require('body-parser');
 const router = Router();
-//connect to Mongodb
 const db = require('../database/database');
-const jwt = require('jsonwebtoken');
-let users;
 
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
@@ -14,78 +11,113 @@ router.use((req,res,next)=>{
     next();
 })
 
-    
-  
-router.use('/check', async(req,res)=>{
-    const TokenUsername= req.user.username;
-    let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
-    if (userExist){
-        try {
-            if(userExist.praksa.status=="Nema"){
-                return res.status(403).json({msg: "Redirect"})
-            }else{
-                res.status(200).send(JSON.stringify({data: userExist.data, email: TokenUsername, practice: userExist.practice.fin, praksa:userExist.praksa }  )); 
-            }
-            
-        } catch{
-        console.log("greska u dohvacanju username-a");
-        res.status(403).send("neap");
-        }
-    }   
-    }) 
+// GET /practice/list - Dohvati podatke o praksi studenta
+router.get('/list', async(req, res) => {
+  try {
+      const start = parseInt(req.query.start) || 0; 
+      const prakseTemp = await db.getDb().collection("prakse").find().skip(start).limit(4); 
+      let prakse = await prakseTemp.toArray();
+      if (prakse === undefined || prakse.length == 0) {
+          res.status(404).json({ message: "No content" });
+          return;
+      }
+      res.status(200).json(prakse); 
+  } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Server error" });
+  }
+});
 
-
-router.get('/:day', async(req, res) => {
-    const TokenUsername= req.user.username;
-    let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername});
-    if (userExist){
-        const day = req.params.day;
-        console.log(day);
-        console.log("test");
-        try {
-        const userPractice = await db.getDb().collection('collection').findOne({ email: TokenUsername });
-        console.log({ email: TokenUsername });
-        if (!userPractice) {
-            res.status(404).json({ message: "User not found" });
-            return;
-        }
-        const practiceData = userPractice.practice.day;
-        if (!practiceData[day]) {
-            res.status(404).json({ message: "Practice data for the requested day not found" });
-            return;
-        }
+// GET /practice/ - Dohvati podatke o praksi studenta
+router.get('/', async(req,res)=>{
+    try {
+        const tokenUsername = req.user.username;
+        const userExist = await db.getDb().collection('collection').findOne({ email: tokenUsername });
     
-        res.status(200).json(practiceData[day]);
-        } catch (error) {
-        console.log(error);
+        if (userExist) {
+          if (userExist.praksa.status === "Nema") {
+            return res.status(403).json({ msg: "Redirect" });
+          } else {
+            res.status(200).json({
+              data: userExist.data,
+              email: tokenUsername,
+              practice: userExist.practice.fin,
+              praksa: userExist.praksa
+            });
+          }
+        } else {
+          console.log("Error retrieving username");
+          res.status(403).send({msg:"forbidden"});
+        }
+      } catch (error) {
+        console.log("Error retrieving user data:", error);
         res.status(500).json({ message: "Server error" });
+      }
+});
+
+// PUT /practice/choose - Izaberi praksu, te promjeni status praske
+router.put('/choose', async (req, res) => {
+  try {
+    const tokenUsername = req.user.username;
+    let naziv = req.body.Naziv_poduzeca;
+        console.log(naziv);
+        let praksaExist = await db.getDb().collection('prakse').findOne({ Naziv_poduzeća: naziv})
+        if (!praksaExist) {
+            console.log('praksa not found');
+            return res.status(404).json({ message: 'praksa not found' });
         }
-    }   
-    else{
-        return res.status(200).json({msg: "Redirect"})
-    }
-  }); 
+        let result = await db.getDb().collection('collection').updateOne(
+            { email : tokenUsername },
+            { $set: { 'praksa': {status:"U tijeku", Mentor:"Petar Peric", Datum_pocetka:new Date().toLocaleString(),Datum_zavrsetka:"/",Naziv_poduzeca:naziv} } },
+            { upsert: true }      
+        );
+        res.status(201).json("OK"); 
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error); 
+  }
+});
 
 
+// GET /practice/:day - Dohvati podatke danu
+router.get('/:day', async(req, res) => {
+    try {
+        const tokenUsername = req.user.username;
+        const userExist = await db.getDb().collection('collection').findOne({ email: tokenUsername });
+    
+        if (!userExist) {
+          return res.status(404).json({ message: "User not found" });
+        }
+    
+        const day = req.params.day;
+        const practiceData = userExist.practice.day;
+    
+        if (!practiceData || !practiceData[day]) {
+          return res.status(200).json({  content: '', title: ''  });
+        }
+        
+        res.status(200).json(practiceData[day]);
+      } catch (error) {
+        console.log("Error retrieving practice data:", error);
+        res.status(500).json({ message: "Server error" });
+      }
+});
 
-
-  router.post('/', async(req,res)=>{
+// put /practice/ - Izmjeni podatke prakse
+ router.put('/', async(req,res)=>{
     try {
         const TokenUsername= req.user.username;
-        let userExist1 = await db.getDb().collection('collection').findOne({ email: TokenUsername});
-        if(userExist1.practice.fin ==="false"){
+        let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername});
+
+        if (!userExist) {
+            return res.status(404).json({ message: "User not found" });
+          }
+        
+        if(userExist.practice.fin ==="false"){
             const { day, content, title } = req.body;
-            console.log(title);
-            if (!userExist1) {
-                console.log('User not found');
-                return res.status(404).json({ message: 'User not found' });
-            }
-            let result = await db.getDb().collection('collection').updateOne(
-                { email : userExist1.email },
-                { $set: { [`practice.day.${day}`]: {content:content, title:title} } },
-                { upsert: true }      
-            );
-            console.log(result);
+            const updateQuery = { $set: { [`practice.day.${day}`]: { content: content, title: title } } };
+            const result = await db.getDb().collection('collection').updateOne({ email: userExist.email }, updateQuery, { upsert: true });
+
             res.status(201).json("OK"); 
         }
        
@@ -96,36 +128,36 @@ router.get('/:day', async(req, res) => {
         console.log(error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+}); 
 
-router.post('/predaj', async(req,res)=>{
+// put /practice/predaj - Izmjeni status prakse
+router.put('/predaj', async(req,res)=>{
        try {
             const TokenUsername= req.user.username;
-            let userExist1 = await db.getDb().collection('collection').findOne({ email: TokenUsername});
-            if (!userExist1) {
-                console.log('User not found');
+            let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername});
+
+            if (!userExist) {
                 return res.status(404).json({ message: 'User not found' });
             }
-            if (userExist1.practice.fin === "false") {
-                let result = await db.getDb().collection('collection').updateOne(
-                    { email : userExist1.email },
-                    { 
-                        $set: { 
-                            'practice.fin': "true",
-                            'praksa.status': "Završena",
-                            'praksa.Datum_zavrsetka': new Date().toLocaleString()
-                        } 
-                    },
-                    { upsert: true }
-                );
+
+            if (userExist.practice.fin === "false") {
+                const updateQuery = {
+                    $set: {
+                    'practice.fin': "true",
+                    'praksa.status': "Završena",
+                    'praksa.Datum_zavrsetka': new Date().toLocaleString()
+                    }
+                };
+
+                const result = await db.getDb().collection('collection').updateOne({ email: userExist.email }, updateQuery, { upsert: true });
+
                 console.log(result);
                 res.status(201).json("OK");
               }
               
         }
         catch (error) {
-            console.log("Something went wrong");
-            console.log(error);
+            console.log("Error practice data: ", error);
             res.status(500).json({ message: 'Something went wrong' });
         }
     });

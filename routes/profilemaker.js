@@ -5,8 +5,6 @@ const multer = require('multer');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 
-
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, './uploads');
@@ -15,64 +13,64 @@ const storage = multer.diskStorage({
     cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
   }
 });
+
 const upload = multer({ storage: storage });
 
-router.use('/check', async(req,res)=>{
+// PUT /profilemaker/profilePicture/upload - Izmjeni sliku korisnika
+router.put('/profilePicture/upload', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send('No file was uploaded.');
+    }
   
-  res.status(200).send();
-}) 
-
-router.use('/upload', upload.single('image'), (req, res) => {
-  let img;
-  if (!req.file) {
-    return res.status(400).send('No file was uploaded.');
+    const imgPath = req.file.path.split('\\').pop();
+    res.status(200).json(imgPath);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error"  });
   }
-  var array = req.file.path.split("\\");
-  img = array.pop();
-  //img= req.file.path;
-   res.status(200).json(img);
 });
 
-const doesExist = async(req,res,next)=>{    
-  
-  const TokenUsername= req.user.username;
-  console.log(TokenUsername);
-  let userExist = await db.getDb().collection('collection').findOne({ email: TokenUsername})
-    if (userExist){
-      let img = req.body.data.avatar;
-      try {
-        if(img === "")
-            img = "default.jpg";
-    
-        let test = await db.getDb().collection('collection').findOneAndUpdate(
-          { email : TokenUsername},
-          { $set: {"data":{
-                          "ime" : req.body.data.ime, "prezime" : req.body.data.prezime,
-                          "rodenje" : req.body.data.rodenje, "spol" : req.body.data.spol,
-                          "nacionalnost" : req.body.data.nacionalnost, "mob" : req.body.data.mob,
-                          "lokacija" : req.body.data.lokacija, "profesija" : req.body.data.profesija,
-                          "about" : req.body.data.about, "vjestine" : req.body.data.vjestine,
-                          "avatar":img
-                          }
-                }
-               
-          } 
-        
-       );
-       return res.status(201).json({msg:"ok"})
-      } catch{
-        console.log("nije mogao postat");
+ // PUT /profilemaker/userProfile - Izmjeni podatke korisnika
+router.put('/userProfile', upload.single('image'), async (req, res) => {
+  try {
+    const tokenUsername = req.user.username;
+    const userExist = await db.getDb().collection('collection').findOne({ email: tokenUsername });
+
+    if (!userExist) {
+      return res.status(403).json({ msg: 'Forbidden' });
+    }
+
+    let img = req.body.data.avatar;
+    if (img === '') {
+      img = 'default.jpg';
+    }
+
+    await db.getDb().collection('collection').findOneAndUpdate(
+      { email: tokenUsername },
+      {
+        $set: {
+          'data.ime': req.body.data.ime,
+          'data.prezime': req.body.data.prezime,
+          'data.rodenje': req.body.data.rodenje,
+          'data.spol': req.body.data.spol,
+          'data.nacionalnost': req.body.data.nacionalnost,
+          'data.mob': req.body.data.mob,
+          'data.lokacija': req.body.data.lokacija,
+          'data.profesija': req.body.data.profesija,
+          'data.about': req.body.data.about,
+          'data.vjestine': req.body.data.vjestine,
+          'data.avatar': img
+        }
       }
-    }
-    else{
-      res.status(403).json({msg: "Forbidden"})
-    }
-}
+    );
 
-router.use('/postdata',doesExist,(req,res)=>{
-  res.status(200).send();
-}) 
-
+    return res.status(201).json({ msg: 'ok' });
+  } catch (error) {
+    console.log('Error while updating user data:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 module.exports = router;
 
